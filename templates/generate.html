@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card quiz-card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">Create Your Quiz</h2>
+                    
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
+                    
+                    <form id="quiz-generation-form" method="POST">
+                        <div class="mb-4">
+                            <label for="topic" class="form-label">Quiz Topic</label>
+                            <input type="text" class="form-control" id="topic" name="topic" 
+                                   placeholder="Enter topic (e.g., World History, Physics, Literature)" required>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="num-questions" class="form-label">Number of Questions</label>
+                            <select class="form-select" id="num-questions" name="num_questions" required>
+                                <option value="5">5 Questions</option>
+                                <option value="10">10 Questions</option>
+                                <option value="15">15 Questions</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" id="submit-btn" class="btn btn-primary w-100">
+                            <span class="spinner-border spinner-border-sm loading-spinner" role="status"></span>
+                            Generate Quiz
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

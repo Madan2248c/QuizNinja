@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero-section d-flex align-items-center position-relative">
+    <div class="hero-overlay"></div>
+    <div class="container position-relative text-light text-center">
+        <h1 class="display-4 mb-4">Welcome to QuizMaster</h1>
+        <p class="lead mb-4">Test your knowledge with AI-generated quizzes on any topic</p>
+        <a href="{{ url_for('generate') }}" class="btn btn-primary btn-lg">
+            Start Quiz <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="card-title"><i class="bi bi-lightning-charge"></i> Dynamic</h3>
+                    <p class="card-text">Questions are generated in real-time using advanced AI technology.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="card-title"><i class="bi bi-book"></i> Educational</h3>
+                    <p class="card-text">Learn from detailed explanations and constructive feedback.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3 class="card-title"><i class="bi bi-gear"></i> Customizable</h3>
+                    <p class="card-text">Choose your topic and number of questions to suit your needs.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

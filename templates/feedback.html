@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h2>Quiz Complete!</h2>
+        <div class="display-4 mb-3">
+            Score: {{ score }}/{{ total }} ({{ "%.1f"|format(percentage) }}%)
+        </div>
+        
+        {% if percentage >= 80 %}
+        <div class="alert alert-success">Excellent work! You've mastered this topic!</div>
+        {% elif percentage >= 60 %}
+        <div class="alert alert-info">Good job! Keep practicing to improve further.</div>
+        {% else %}
+        <div class="alert alert-warning">Keep learning! Review the explanations below.</div>
+        {% endif %}
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% for question in questions %}
+            <div class="card mb-4 feedback-card">
+                <div class="card-body">
+                    <h5 class="card-title">Question {{ loop.index }}</h5>
+                    <p>{{ question.question }}</p>
+                    
+                    <div class="mb-3">
+                        <strong>Your Answer:</strong> {{ answers[loop.index0] }}
+                        {% if answers[loop.index0] == question.correct %}
+                        <span class="text-success"><i class="bi bi-check-circle"></i></span>
+                        {% else %}
+                        <span class="text-danger"><i class="bi bi-x-circle"></i></span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Correct Answer:</strong> {{ question.correct }}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Explanation:</strong><br>
+                        {{ question.explanation }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="text-center mt-4">
+                <a href="{{ url_for('generate') }}" class="btn btn-primary btn-lg">
+                    Try Another Quiz
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="progress mb-4">
+        <div class="progress-bar" role="progressbar" 
+             style="width: {{ (question_num / total_questions) * 100 }}%"></div>
+    </div>
+    
+    <div class="quiz-card card">
+        <div class="card-body">
+            <h5 class="text-muted mb-3">Question {{ question_num }} of {{ total_questions }}</h5>
+            
+            <h3 class="card-title mb-4">{{ question.question }}</h3>
+            
+            <form id="quiz-answer-form" method="POST">
+                {% for option in question.options %}
+                <button type="submit" name="answer" value="{{ option }}" 
+                        class="btn btn-outline-primary option-btn">
+                    {{ option }}
+                </button>
+                {% endfor %}
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
