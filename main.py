@@ -18,6 +18,7 @@ chat_model = ChatGroq(
     model_name="llama3-70b-8192"
 )
 
+
 # Define the response schema for quiz questions
 response_schemas = [
     ResponseSchema(name="questions", description="Array of quiz questions", type="array")
