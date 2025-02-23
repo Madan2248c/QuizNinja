@@ -43,23 +43,42 @@ def generate():
                 messages=[{"role": "user", "content": prompt}]
             )
 
+            # Log the raw response for debugging
+            response_content = completion.choices[0].message.content
+            logging.debug(f"Raw Groq response: {response_content}")
+
             # Parse the JSON response before storing in session
-            questions_json = completion.choices[0].message.content
-            questions_data = json.loads(questions_json)
+            try:
+                questions_data = json.loads(response_content)
 
-            session['quiz_data'] = questions_data
-            session['current_question'] = 0
-            session['score'] = 0
-            session['answers'] = []
+                # Validate the response structure
+                if 'questions' not in questions_data:
+                    raise ValueError("Response missing 'questions' array")
+                if not isinstance(questions_data['questions'], list):
+                    raise ValueError("'questions' is not an array")
+                if not questions_data['questions']:
+                    raise ValueError("No questions were generated")
 
-            return redirect(url_for('quiz'))
+                session['quiz_data'] = questions_data
+                session['current_question'] = 0
+                session['score'] = 0
+                session['answers'] = []
 
-        except json.JSONDecodeError as e:
-            logging.error(f"Error parsing JSON response: {str(e)}")
-            return render_template('generate.html', error="Failed to generate quiz. Please try again.")
+                return redirect(url_for('quiz'))
+
+            except json.JSONDecodeError as e:
+                error_msg = f"Invalid JSON format in response: {str(e)}"
+                logging.error(error_msg)
+                return render_template('generate.html', error=error_msg)
+            except ValueError as e:
+                error_msg = f"Invalid response format: {str(e)}"
+                logging.error(error_msg)
+                return render_template('generate.html', error=error_msg)
+
         except Exception as e:
-            logging.error(f"Error generating questions: {str(e)}")
-            return render_template('generate.html', error="Failed to generate quiz. Please try again.")
+            error_msg = f"Failed to generate quiz: {str(e)}"
+            logging.error(error_msg)
+            return render_template('generate.html', error=error_msg)
 
     return render_template('generate.html')
 
