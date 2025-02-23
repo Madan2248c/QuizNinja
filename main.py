@@ -14,7 +14,7 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
 # Initialize Groq client via LangChain
 chat_model = ChatGroq(
-    api_key="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",
+    api_key="",
     model_name="llama3-70b-8192"
 )
 
