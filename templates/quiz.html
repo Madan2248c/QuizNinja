@@ -6,20 +6,23 @@
         <div class="progress-bar" role="progressbar" 
              style="width: {{ (question_num / total_questions) * 100 }}%"></div>
     </div>
-    
+
     <div class="quiz-card card">
         <div class="card-body">
             <h5 class="text-muted mb-3">Question {{ question_num }} of {{ total_questions }}</h5>
-            
+
             <h3 class="card-title mb-4">{{ question.question }}</h3>
-            
+
             <form id="quiz-answer-form" method="POST">
                 {% for option in question.options %}
-                <button type="submit" name="answer" value="{{ option }}" 
-                        class="btn btn-outline-primary option-btn">
-                    {{ option }}
-                </button>
+                <div class="option-wrapper mb-3">
+                    <input type="radio" name="answer" id="option{{ loop.index }}" value="{{ option }}" class="d-none">
+                    <label for="option{{ loop.index }}" class="btn btn-outline-primary option-btn w-100 text-start">
+                        {{ option }}
+                    </label>
+                </div>
                 {% endfor %}
+                <button type="submit" class="btn btn-primary w-100 mt-4">Submit Answer</button>
             </form>
         </div>
     </div>

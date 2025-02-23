@@ -67,3 +67,10 @@
 .wrong-answer {
     border-left: 4px solid var(--bs-danger);
 }
+
+/* Style for radio button labels */
+input[type="radio"]:checked + .option-btn {
+    background-color: var(--bs-primary);
+    color: white;
+    border-color: var(--bs-primary);
+}
