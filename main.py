@@ -1,5 +1,6 @@
 import os
 import logging
+import json
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from groq import Groq
 
@@ -21,7 +22,7 @@ def generate():
     if request.method == 'POST':
         topic = request.form.get('topic')
         num_questions = int(request.form.get('num_questions', 5))
-        
+
         try:
             # Generate questions using Groq API
             prompt = f"""Generate {num_questions} multiple choice questions about {topic}. 
@@ -41,41 +42,47 @@ def generate():
                 model="llama3-70b-8192",
                 messages=[{"role": "user", "content": prompt}]
             )
-            
-            questions = completion.choices[0].message.content
-            session['quiz_data'] = questions
+
+            # Parse the JSON response before storing in session
+            questions_json = completion.choices[0].message.content
+            questions_data = json.loads(questions_json)
+
+            session['quiz_data'] = questions_data
             session['current_question'] = 0
             session['score'] = 0
             session['answers'] = []
-            
+
             return redirect(url_for('quiz'))
-            
+
+        except json.JSONDecodeError as e:
+            logging.error(f"Error parsing JSON response: {str(e)}")
+            return render_template('generate.html', error="Failed to generate quiz. Please try again.")
         except Exception as e:
             logging.error(f"Error generating questions: {str(e)}")
             return render_template('generate.html', error="Failed to generate quiz. Please try again.")
-            
+
     return render_template('generate.html')
 
 @app.route('/quiz', methods=['GET', 'POST'])
 def quiz():
     if 'quiz_data' not in session:
         return redirect(url_for('generate'))
-        
+
     if request.method == 'POST':
         answer = request.form.get('answer')
         session['answers'].append(answer)
-        
+
         # Update score
         current_q = session['current_question']
         quiz_data = session['quiz_data']
         if answer == quiz_data['questions'][current_q]['correct']:
             session['score'] += 1
-            
+
         session['current_question'] += 1
-        
+
         if session['current_question'] >= len(quiz_data['questions']):
             return redirect(url_for('feedback'))
-            
+
     return render_template('quiz.html', 
                          question=session['quiz_data']['questions'][session['current_question']],
                          question_num=session['current_question'] + 1,
@@ -85,12 +92,12 @@ def quiz():
 def feedback():
     if 'quiz_data' not in session:
         return redirect(url_for('generate'))
-        
+
     quiz_data = session['quiz_data']
     score = session['score']
     total = len(quiz_data['questions'])
     percentage = (score / total) * 100
-    
+
     return render_template('feedback.html',
                          score=score,
                          total=total,
