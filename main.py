@@ -2,7 +2,9 @@ import os
 import logging
 import json
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
-from groq import Groq
+from langchain_groq import ChatGroq
+from langchain.output_parsers import ResponseSchema, StructuredOutputParser
+from langchain.prompts import ChatPromptTemplate, HumanMessagePromptTemplate
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -10,8 +12,39 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
 
-# Initialize Groq client
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+# Initialize Groq client via LangChain
+chat_model = ChatGroq(
+    api_key=os.environ.get("GROQ_API_KEY"),
+    model_name="llama3-70b-8192"
+)
+
+# Define the response schema for quiz questions
+response_schemas = [
+    ResponseSchema(name="questions", description="Array of quiz questions", type="array")
+]
+output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+
+# Create a prompt template
+prompt_template = """Generate {num_questions} multiple choice questions about {topic}.
+Each question should have 4 options and include an explanation for the correct answer.
+
+{format_instructions}
+
+The questions array should contain objects with this structure:
+{{
+    "question": "question text",
+    "options": ["option A", "option B", "option C", "option D"],
+    "correct": "the correct option",
+    "explanation": "detailed explanation for the answer"
+}}"""
+
+prompt = ChatPromptTemplate(
+    messages=[
+        HumanMessagePromptTemplate.from_template(prompt_template)
+    ],
+    input_variables=["topic", "num_questions"],
+    partial_variables={"format_instructions": output_parser.get_format_instructions()}
+)
 
 @app.route('/')
 def index():
@@ -24,54 +57,31 @@ def generate():
         num_questions = int(request.form.get('num_questions', 5))
 
         try:
-            # Generate questions using Groq API
-            prompt = f"""Generate {num_questions} multiple choice questions about {topic}. 
-            Format as JSON array with structure:
-            {{
-                "questions": [
-                    {{
-                        "question": "question text",
-                        "options": ["A", "B", "C", "D"],
-                        "correct": "correct option",
-                        "explanation": "explanation for the answer"
-                    }}
-                ]
-            }}"""
-
-            completion = groq_client.chat.completions.create(
-                model="llama3-70b-8192",
-                messages=[{"role": "user", "content": prompt}]
-            )
+            # Generate questions using LangChain + Groq
+            chain_input = {
+                "topic": topic,
+                "num_questions": num_questions
+            }
+            messages = prompt.format_messages(**chain_input)
+            response = chat_model.invoke(messages)
 
             # Log the raw response for debugging
-            response_content = completion.choices[0].message.content
-            logging.debug(f"Raw Groq response: {response_content}")
+            logging.debug(f"Raw LangChain response: {response.content}")
 
-            # Parse the JSON response before storing in session
             try:
-                questions_data = json.loads(response_content)
+                # Parse the structured output
+                questions_data = output_parser.parse(response.content)
 
-                # Validate the response structure
-                if 'questions' not in questions_data:
-                    raise ValueError("Response missing 'questions' array")
-                if not isinstance(questions_data['questions'], list):
-                    raise ValueError("'questions' is not an array")
-                if not questions_data['questions']:
-                    raise ValueError("No questions were generated")
-
-                session['quiz_data'] = questions_data
+                # Store quiz data in session
+                session['quiz_data'] = {'questions': questions_data['questions']}
                 session['current_question'] = 0
                 session['score'] = 0
                 session['answers'] = []
 
                 return redirect(url_for('quiz'))
 
-            except json.JSONDecodeError as e:
-                error_msg = f"Invalid JSON format in response: {str(e)}"
-                logging.error(error_msg)
-                return render_template('generate.html', error=error_msg)
-            except ValueError as e:
-                error_msg = f"Invalid response format: {str(e)}"
+            except Exception as parse_error:
+                error_msg = f"Error parsing response: {str(parse_error)}"
                 logging.error(error_msg)
                 return render_template('generate.html', error=error_msg)
 

@@ -9,5 +9,7 @@ dependencies = [
     "flask-sqlalchemy>=3.1.1",
     "groq>=0.18.0",
     "gunicorn>=23.0.0",
+    "langchain>=0.3.19",
+    "langchain-groq>=0.2.4",
     "psycopg2-binary>=2.9.10",
 ]
